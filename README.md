@@ -68,8 +68,9 @@ preserved; unknown compatibility generations are rejected.
    under a different basename. `forced` also permits a same-version channel
    switch, while the updater still rejects an ordinary downgrade.
 3. Wait for installation success, then check the live controller version and
+   state with `/usr/local/libexec/plex-io-guard/plex-io-guard-host status`. Check
    `runtime_ready` with
-   `/usr/local/libexec/plex-io-guard/plex-io-guard-host status`. Check source and
+   `/usr/local/libexec/plex-io-guard/plex-io-guard-host config status`. Check source and
    recovery health in the dashboard. The saved native PLG at
    `/boot/config/plugins/plex-io-guard.plg` should have the selected channel's
    `pluginURL`; Plugin Manager / CA Auto Update owns subsequent update checks.
