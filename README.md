@@ -7,9 +7,10 @@ branch `dev`. Source history and credentials are kept separately.
 
 ## Publication status
 
-This is the bootstrap README. A channel is usable only after a verified public
-release and its matching channel pointer have been published. The addresses below
-are planned endpoints; this README alone does not establish availability.
+The `testing` channel publishes [2026.11.9-native-updates.1](https://github.com/bondarevky/plex-io-guard/releases/tag/v2026.11.9-native-updates.1),
+the first public prerelease. Its assets and channel pointer have been verified
+without GitHub authentication. The `stable` channel has no published release yet;
+its URL becomes usable after an ordinary release is published.
 
 | Channel | Native Plugin Manager URL |
 | --- | --- |
@@ -37,13 +38,13 @@ checks. Do not delete journals to force an install.
 
 ### Move an existing offline installation to a channel
 
-Wait for a **new release** built for this public repository and a verified channel
-pointer. The previous private `v2026.11.8-async-acquisition.1` bundle pins the old
+Use the verified `testing` release above, built for this public repository.
+The previous private `v2026.11.8-async-acquisition.1` bundle pins the old
 source provenance and public URLs. Its immutable assets must stay unchanged; it
 cannot be replayed here as the new distribution.
 
 An installation still on the first GitHub release `v2026.11.6-ui-guard.1`
-(protocol1/journal1) can move directly to the next new release
+(protocol1/journal1) can move directly to `2026.11.9-native-updates.1`
 (protocol2/journal3). Installing the later private
 `v2026.11.8-async-acquisition.1` first is unnecessary. Compatible old state is
 preserved; unknown compatibility generations are rejected.
