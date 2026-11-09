@@ -1,0 +1,174 @@
+<?xml version='1.0' encoding='utf-8'?>
+<PLUGIN name="plex-io-guard" version="u1.0042026.00211.0019.0.16E61746976652D75706461746573.00011" pluginURL="https://raw.githubusercontent.com/bondarevky/plex-io-guard/main/testing/plex-io-guard.plg">
+  <CHANGES>Plex IO Guard 2026.11.9-native-updates.1 — testing. Source version: 2026.11.9-native-updates.1.</CHANGES>
+  <FILE Name="/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz">
+    <URL>https://github.com/bondarevky/plex-io-guard/releases/download/v2026.11.9-native-updates.1/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz</URL>
+    <SHA256>5472c14d602e5df0dc1b5d96ed3a5c673c98ff3b449abcea66d1eeb6e8352f92</SHA256>
+  </FILE>
+  <FILE Run="/bin/bash">
+    <INLINE>
+set -euo pipefail
+stage=''
+pig_phase=prepare
+pig_started=$SECONDS
+pig_phase_started=$SECONDS
+pig_syslog=0
+if command -v logger &gt;/dev/null 2&gt;&amp;1 &amp;&amp; command -v timeout &gt;/dev/null 2&gt;&amp;1; then
+  pig_syslog=1
+fi
+pig_log() {
+  local timestamp message
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2&gt;/dev/null) || timestamp=unavailable
+  message="timestamp=$timestamp operation=install version=2026.11.9-native-updates.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
+  # Закрытый stderr может послать PIPE. Отдельный writer получает сигнал сам,
+  # не прерывая lifecycle shell и не меняя обработку сигналов его детей.
+  (printf '%s\n' "$message") &gt;&amp;2 2&gt;/dev/null || :
+  # Недоступный /dev/log не задерживает каждую фазу: одна попытка до секунды,
+  # затем только stderr. Отсутствие timeout не добавляет зависимость установки.
+  if [ "$pig_syslog" -eq 1 ]; then
+    timeout -s KILL 1 logger -t plex-io-guard-lifecycle -- "$message" &gt;/dev/null 2&gt;&amp;1 || pig_syslog=0
+  fi
+}
+pig_begin() {
+  pig_phase=$1
+  pig_phase_started=$SECONDS
+  pig_log "$pig_phase" started 0 0
+}
+pig_done() {
+  pig_log "$pig_phase" succeeded 0 "$((SECONDS - pig_phase_started))"
+}
+pig_finish() {
+  local result=$? cleanup_result=0 cleanup_started=$SECONDS
+  trap - EXIT
+  trap '' HUP INT TERM
+  if [ "$result" -ne 0 ]; then
+    pig_log "$pig_phase" failed "$result" "$((SECONDS - pig_phase_started))"
+  fi
+  # Ошибка cleanup не скрывает исходный код ошибки updater. Удаляем только
+  # временную копию, сохраняя установленные helpers для восстановления.
+  if [ -n "$stage" ]; then
+    pig_log cleanup started 0 0
+    rm -rf -- "$stage" || cleanup_result=$?
+    if [ "$cleanup_result" -eq 0 ]; then
+      pig_log cleanup succeeded 0 "$((SECONDS - cleanup_started))"
+    else
+      pig_log cleanup failed "$cleanup_result" "$((SECONDS - cleanup_started))"
+      if [ "$result" -eq 0 ]; then result=$cleanup_result; fi
+    fi
+  fi
+  if [ "$result" -eq 0 ]; then
+    pig_log complete succeeded 0 "$((SECONDS - pig_started))"
+  fi
+  exit "$result"
+}
+trap pig_finish EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+umask 077
+# /run may be noexec on Unraid. Use the executable installation filesystem
+# for this one temporary binary; the updater keeps runtime state under /run.
+pig_begin prepare
+install -d -m 0755 /usr/local/libexec
+stage=$(mktemp -d /usr/local/libexec/plex-io-guard-update.XXXXXX)
+pig_done
+pig_begin copy
+cp -- '/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz' "$stage/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz"
+pig_done
+pig_begin checksum
+printf '%s  %s\n' '5472c14d602e5df0dc1b5d96ed3a5c673c98ff3b449abcea66d1eeb6e8352f92' "$stage/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz" | sha256sum -c -
+pig_done
+pig_begin extract
+tar -xJOf "$stage/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz" usr/local/libexec/plex-io-guard/plex-io-guard-host &gt; "$stage/plex-io-guard-host"
+chmod 0700 "$stage/plex-io-guard-host"
+pig_done
+# Разовое разрешение root-оператора передаётся одним аргументом, без eval.
+# Updater проверяет точный fence; его окружение не сохраняет это разрешение.
+set -- update --package "$stage/plex-io-guard-2026.11.9_native_updates.1-x86_64-1.txz" --sha256 '5472c14d602e5df0dc1b5d96ed3a5c673c98ff3b449abcea66d1eeb6e8352f92'
+if [ -n "${PLEX_IO_GUARD_RECOVER_UNSTARTED_FENCE:-}" ]; then
+  set -- "$@" --recover-unstarted-fence "$PLEX_IO_GUARD_RECOVER_UNSTARTED_FENCE"
+fi
+unset PLEX_IO_GUARD_RECOVER_UNSTARTED_FENCE
+pig_begin updater
+"$stage/plex-io-guard-host" "$@"
+pig_done
+</INLINE>
+  </FILE>
+  <FILE Run="/bin/bash" Method="remove">
+    <INLINE>
+set -euo pipefail
+stage=''
+pig_phase=prepare
+pig_started=$SECONDS
+pig_phase_started=$SECONDS
+pig_syslog=0
+if command -v logger &gt;/dev/null 2&gt;&amp;1 &amp;&amp; command -v timeout &gt;/dev/null 2&gt;&amp;1; then
+  pig_syslog=1
+fi
+pig_log() {
+  local timestamp message
+  timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2&gt;/dev/null) || timestamp=unavailable
+  message="timestamp=$timestamp operation=remove version=2026.11.9-native-updates.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
+  # Закрытый stderr может послать PIPE. Отдельный writer получает сигнал сам,
+  # не прерывая lifecycle shell и не меняя обработку сигналов его детей.
+  (printf '%s\n' "$message") &gt;&amp;2 2&gt;/dev/null || :
+  # Недоступный /dev/log не задерживает каждую фазу: одна попытка до секунды,
+  # затем только stderr. Отсутствие timeout не добавляет зависимость установки.
+  if [ "$pig_syslog" -eq 1 ]; then
+    timeout -s KILL 1 logger -t plex-io-guard-lifecycle -- "$message" &gt;/dev/null 2&gt;&amp;1 || pig_syslog=0
+  fi
+}
+pig_begin() {
+  pig_phase=$1
+  pig_phase_started=$SECONDS
+  pig_log "$pig_phase" started 0 0
+}
+pig_done() {
+  pig_log "$pig_phase" succeeded 0 "$((SECONDS - pig_phase_started))"
+}
+pig_finish() {
+  local result=$? cleanup_result=0 cleanup_started=$SECONDS
+  trap - EXIT
+  trap '' HUP INT TERM
+  if [ "$result" -ne 0 ]; then
+    pig_log "$pig_phase" failed "$result" "$((SECONDS - pig_phase_started))"
+  fi
+  # Ошибка cleanup не скрывает исходный код ошибки updater. Удаляем только
+  # временную копию, сохраняя установленные helpers для восстановления.
+  if [ -n "$stage" ]; then
+    pig_log cleanup started 0 0
+    rm -rf -- "$stage" || cleanup_result=$?
+    if [ "$cleanup_result" -eq 0 ]; then
+      pig_log cleanup succeeded 0 "$((SECONDS - cleanup_started))"
+    else
+      pig_log cleanup failed "$cleanup_result" "$((SECONDS - cleanup_started))"
+      if [ "$result" -eq 0 ]; then result=$cleanup_result; fi
+    fi
+  fi
+  if [ "$result" -eq 0 ]; then
+    pig_log complete succeeded 0 "$((SECONDS - pig_started))"
+  fi
+  exit "$result"
+}
+trap pig_finish EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+pig_begin core
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-core --id plugin-remove-core-2026.11.9-native-updates.1
+pig_done
+pig_begin helper
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-helper --id plugin-remove-2026.11.9-native-updates.1
+pig_done
+pig_begin web
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-web --id plugin-remove-web-2026.11.9-native-updates.1
+pig_done
+pig_begin package
+/sbin/removepkg plex-io-guard
+pig_done
+# Preserve cached recovery packages, settings and SSD journals.
+</INLINE>
+  </FILE>
+</PLUGIN>
