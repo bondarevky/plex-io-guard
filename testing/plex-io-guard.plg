@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<PLUGIN name="plex-io-guard" version="u1.0042026.00211.00225.0.16C65676163792D73746172747570.00011" pluginURL="https://raw.githubusercontent.com/bondarevky/plex-io-guard/main/testing/plex-io-guard.plg">
-  <CHANGES>Plex IO Guard 2026.11.25-legacy-startup.1 — testing. Source version: 2026.11.25-legacy-startup.1.</CHANGES>
-  <FILE Name="/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz">
-    <URL>https://github.com/bondarevky/plex-io-guard/releases/download/v2026.11.25-legacy-startup.1/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz</URL>
-    <SHA256>69d271d31dc2a8851f5cf8479f225dec81af4305209d47aa0217fb2c494247d5</SHA256>
+<PLUGIN name="plex-io-guard" version="u1.0042026.00211.00226.0.173746F702D636865636B706F696E74.00011" pluginURL="https://raw.githubusercontent.com/bondarevky/plex-io-guard/main/testing/plex-io-guard.plg">
+  <CHANGES>Plex IO Guard 2026.11.26-stop-checkpoint.1 — testing. Source version: 2026.11.26-stop-checkpoint.1.</CHANGES>
+  <FILE Name="/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz">
+    <URL>https://github.com/bondarevky/plex-io-guard/releases/download/v2026.11.26-stop-checkpoint.1/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz</URL>
+    <SHA256>fe66ae0eebec1826498093c6231260aaafa1742fa45c9d143bfbaef68988a2f7</SHA256>
   </FILE>
   <FILE Run="/bin/bash">
     <INLINE>
@@ -19,7 +19,7 @@ fi
 pig_log() {
   local timestamp message
   timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2&gt;/dev/null) || timestamp=unavailable
-  message="timestamp=$timestamp operation=install version=2026.11.25-legacy-startup.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
+  message="timestamp=$timestamp operation=install version=2026.11.26-stop-checkpoint.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
   # Закрытый stderr может послать PIPE. Отдельный writer получает сигнал сам,
   # не прерывая lifecycle shell и не меняя обработку сигналов его детей.
   (printf '%s\n' "$message") &gt;&amp;2 2&gt;/dev/null || :
@@ -74,18 +74,18 @@ install -d -m 0755 /usr/local/libexec
 stage=$(mktemp -d /usr/local/libexec/plex-io-guard-update.XXXXXX)
 pig_done
 pig_begin copy
-cp -- '/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz' "$stage/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz"
+cp -- '/boot/config/plugins/plex-io-guard/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz' "$stage/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz"
 pig_done
 pig_begin checksum
-printf '%s  %s\n' '69d271d31dc2a8851f5cf8479f225dec81af4305209d47aa0217fb2c494247d5' "$stage/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz" | sha256sum -c -
+printf '%s  %s\n' 'fe66ae0eebec1826498093c6231260aaafa1742fa45c9d143bfbaef68988a2f7' "$stage/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz" | sha256sum -c -
 pig_done
 pig_begin extract
-tar -xJOf "$stage/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz" usr/local/libexec/plex-io-guard/plex-io-guard-host &gt; "$stage/plex-io-guard-host"
+tar -xJOf "$stage/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz" usr/local/libexec/plex-io-guard/plex-io-guard-host &gt; "$stage/plex-io-guard-host"
 chmod 0700 "$stage/plex-io-guard-host"
 pig_done
 # Разовое разрешение root-оператора передаётся одним аргументом, без eval.
 # Updater проверяет точный fence; его окружение не сохраняет это разрешение.
-set -- update --package "$stage/plex-io-guard-2026.11.25_legacy_startup.1-x86_64-1.txz" --sha256 '69d271d31dc2a8851f5cf8479f225dec81af4305209d47aa0217fb2c494247d5'
+set -- update --package "$stage/plex-io-guard-2026.11.26_stop_checkpoint.1-x86_64-1.txz" --sha256 'fe66ae0eebec1826498093c6231260aaafa1742fa45c9d143bfbaef68988a2f7'
 if [ -n "${PLEX_IO_GUARD_RECOVER_UNSTARTED_FENCE:-}" ]; then
   set -- "$@" --recover-unstarted-fence "$PLEX_IO_GUARD_RECOVER_UNSTARTED_FENCE"
 fi
@@ -109,7 +109,7 @@ fi
 pig_log() {
   local timestamp message
   timestamp=$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2&gt;/dev/null) || timestamp=unavailable
-  message="timestamp=$timestamp operation=remove version=2026.11.25-legacy-startup.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
+  message="timestamp=$timestamp operation=remove version=2026.11.26-stop-checkpoint.1 phase=$1 result=$2 elapsed_s=$4 exit_code=$3"
   # Закрытый stderr может послать PIPE. Отдельный writer получает сигнал сам,
   # не прерывая lifecycle shell и не меняя обработку сигналов его детей.
   (printf '%s\n' "$message") &gt;&amp;2 2&gt;/dev/null || :
@@ -157,13 +157,13 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 
 pig_begin core
-/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-core --id plugin-remove-core-2026.11.25-legacy-startup.1
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-core --id plugin-remove-core-2026.11.26-stop-checkpoint.1
 pig_done
 pig_begin helper
-/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-helper --id plugin-remove-2026.11.25-legacy-startup.1
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-helper --id plugin-remove-2026.11.26-stop-checkpoint.1
 pig_done
 pig_begin web
-/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-web --id plugin-remove-web-2026.11.25-legacy-startup.1
+/usr/local/libexec/plex-io-guard/plex-io-guard-host remove-web --id plugin-remove-web-2026.11.26-stop-checkpoint.1
 pig_done
 pig_begin package
 /sbin/removepkg plex-io-guard
